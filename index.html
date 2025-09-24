@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Ordenar números de 5 cifras</title>
+<style>
+    /* Diseño general */
+    * { box-sizing: border-box; margin:0; padding:0; }
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #1a3a5f 0%, #0d2340 100%);
+        min-height:100vh;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        color:#333;
+        padding:5px;
+    }
+    .game-container {
+        background:white;
+        border-radius:16px;
+        box-shadow:0 12px 24px rgba(0,0,0,0.12);
+        padding:1.5rem;
+        max-width:900px;
+        width:100%;
+        min-height:580px;
+        position:relative;
+        overflow:hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    header { 
+        text-align:center; 
+        margin-bottom:1.2rem; 
+        margin-top: 2.5rem;
+    }
+    h1 { 
+        color:#1a3a5f; 
+        font-size:clamp(1.8rem, 5vw, 3rem);
+        margin-bottom:0.2rem; 
+    }
+    .game-info { 
+        display:flex; 
+        justify-content:space-between; 
+        align-items:center; 
+        margin-bottom:0.8rem; 
+        gap:0.5rem; 
+        flex-wrap:wrap;
+    }
+    .timer { 
+        font-size:clamp(0.85rem, 2vw, 1.2rem); 
+        font-weight:700; 
+        color:#1a3a5f; 
+    }
+    .progress-bar { 
+        flex:1; 
+        height:10px; 
+        background:#e6f2ff; 
+        border-radius:10px; 
+        overflow:hidden; 
+        margin:0 0.3rem;
+    }
+    .progress-fill { 
+        height:100%; 
+        width:0%; 
+        transition:width .3s ease; 
+        background:linear-gradient(90deg,#f59e42 0%,#e67e22 100%); 
+    }
+    .score { 
+        font-size:clamp(0.8rem, 2vw, 1.1rem); 
+        font-weight:700; 
+        color:#1a3a5f; 
+    }
+    /* Pantallas */
+    .screen { display:none; animation:fadeIn .4s ease; }
+    .screen.active { display:block; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(12px);} to { opacity:1; transform:translateY(0);} }
+    /* Caja de consejo */
+    .start-content { 
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex-grow: 1;
+        padding: 1rem 0;
+    }
+    .instructions { 
+        font-size:clamp(1.1rem, 3.5vw, 1.5rem); 
+        color:#1a3a5f; 
+        margin-bottom:1.5rem; 
+        text-align: center;
+    }
+    .advice-box {
+        margin: 0 auto 2.5rem auto; 
+        max-width:90%;
+        background: #E8EAFF;
+        border-left:4px solid #1a3a5f;
+        padding:1rem 1.2rem; 
+        border-radius:10px;
+        font-size:clamp(1.1rem, 3.5vw, 1.4rem); 
+        color:#1a3a5f;
+        line-height:1.5;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+        text-align: center;
+    }
+    .highlight-keyword { color:#f59e42; font-weight:800; }
+    /* Contenedor de números */
+    .numbers-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        margin-bottom: 1.5rem;
+        max-width: 100%;
+    }
+    .number-item {
+        display: flex;
+        align-items: center;
+        background: #f8fff9;
+        border: 2px solid #b7e4c7;
+        border-radius: 8px;
+        padding: 0.8rem 1rem;
+        position: relative;
+        transition: all 0.2s ease;
+    }
+    .number-item:hover {
+        background: #f0f8ff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .number-value {
+        font-size: clamp(1.4rem, 4vw, 1.8rem);
+        font-weight: 700;
+        color: #1a3a5f;
+        flex-grow: 1;
+        text-align: center;
+        transition: color 0.3s ease;
+    }
+    .number-value.correct {
+        color: #2ecc71;
+    }
+    .number-value.incorrect {
+        color: #e74c3c;
+    }
+    .number-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        margin-left: 0.5rem;
+    }
+    .arrow-btn {
+        width: 30px;
+        height: 30px;
+        border: none;
+        background: #f59e42;
+        color: white;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        transition: background-color 0.2s ease;
+    }
+    .arrow-btn:hover {
+        background: #e67e22;
+    }
+    .arrow-btn:active {
+        transform: scale(0.95);
+    }
+    .arrow-btn:disabled {
+        background: #cccccc;
+        cursor: not-allowed;
+    }
+    /* Botones */
+    .action-buttons { 
+        display: flex; 
+        flex-direction: column;
+        justify-content: center; 
+        gap: 0.6rem; 
+        margin-top: 0.8rem; 
+        align-items: center;
+    }
+    .btn-row {
+        display: flex;
+        justify-content: center;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+        width: 100%;
+    }
+    .btn {
+        color: white; 
+        border: none; 
+        padding: 0.7rem 1.2rem;
+        border-radius: 8px; 
+        cursor: pointer;
+        font-size: clamp(0.85rem, 2.3vw, 1rem);
+        font-weight: 700;
+        min-width: 120px;
+        transition: background-color 0.3s ease, transform 0.1s ease;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+    .btn:active {
+        transform: translateY(0);
+    }
+    .btn-start {
+        background: #f59e42;
+    }
+    .btn-start:hover {
+        background: #e67e22;
+    }
+    .btn-check {
+        background: #254fba;
+        color: white;
+    }
+    .btn-check:hover {
+        background: #1d3d94;
+    }
+    .btn-continue {
+        background: #2ecc71;
+    }
+    .btn-continue:hover {
+        background: #27ae60;
+    }
+    .btn-reset {
+        background: #f59e42;
+    }
+    .btn-reset:hover {
+        background: #e67e22;
+    }
+    .btn-play-again {
+        background: #f59e42;
+    }
+    .btn-play-again:hover {
+        background: #e67e22;
+    }
+    .btn-infinite {
+        background: #3498db;
+    }
+    .btn-infinite:hover {
+        background: #2980b9;
+    }
+    .btn-help {
+        background: #9c27b0;
+        color: white;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        font-size: 1.2rem;
+        position: absolute;
+        top: 0.8rem;
+        right: 0.8rem;
+        z-index: 10;
+    }
+    .btn-help:hover {
+        background: #7b1fa2;
+    }
+    .btn:disabled { 
+        background:#b7e4c7; 
+        cursor:not-allowed; 
+        opacity: 0.7;
+    }
+    .mute-btn { 
+        position: absolute; 
+        top: 0.8rem; 
+        right: 4.5rem; 
+        background: #f59e42; 
+        border: 2px solid #ffffff; 
+        width: 36px; 
+        height: 36px; 
+        border-radius: 50%; 
+        cursor: pointer; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center;
+        font-size: 0.95rem;
+        z-index: 10;
+        transition: background-color 0.3s ease;
+    }
+    .mute-btn:hover {
+        background: #e67e22;
+    }
+    .trophy { 
+        font-size: clamp(4rem, 10vw, 6rem); 
+        margin: 0.2rem 0; 
+        animation: bounce 1s ease infinite; 
+        color: #f59e42; 
+    }
+    @keyframes bounce { 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-8px);} }
+    /* Pantalla final */
+    .final-score { 
+        font-size: clamp(2.2rem, 6vw, 3.5rem);
+        color: #254fba;
+        margin-bottom: 0.5rem; 
+        font-weight: 800;
+    }
+    .final-time { 
+        font-size: clamp(0.9rem, 3vw, 1.1rem); 
+        color: #1a3a5f; 
+        margin-bottom: 0.8rem; 
+    }
+    .encouragement {
+        font-size: clamp(1rem, 3.5vw, 1.2rem);
+        color: #1a3a5f;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+    .credit { 
+        font-size: clamp(0.8rem, 2.5vw, 0.9rem); 
+        color: #1a3a5f; 
+        display: block; 
+        text-align: center; 
+        margin-top: 2rem; 
+    }
+    .school-logo {
+        display: block;
+        margin: 1.5rem auto 0;
+        max-width: 150px;
+        height: auto;
+    }
+    /* Confeti */
+    .confetti {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        animation: confetti-fall 3s linear forwards;
+    }
+    @keyframes confetti-fall {
+        0% {
+            transform: translate(0, 0) rotate(0deg);
+            opacity: 1;
+        }
+        100% {
+            transform: translate(var(--tx), var(--ty)) rotate(360deg);
+            opacity: 0;
+        }
+    }
+    /* Centrado en pantalla final */
+    #resultsScreen .results-screen {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start; 
+        text-align: center;
+        min-height: calc(100vh - 180px);
+        padding: 0.8rem;
+        box-sizing: border-box;
+    }
+    /* Ventana de ayuda */
+    .help-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 100;
+        justify-content: center;
+        align-items: center;
+        padding: 1rem;
+    }
+    .help-content {
+        background-color: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        max-width: 500px;
+        width: 100%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+    .help-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #e0e0e0;
+        padding-bottom: 0.5rem;
+    }
+    .help-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1a3a5f;
+    }
+    .close-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #666;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.2s ease;
+    }
+    .close-btn:hover {
+        background-color: #f0f0f0;
+    }
+    .help-text {
+        font-size: 1rem;
+        line-height: 1.6;
+        color: #333;
+    }
+    .help-text h3 {
+        color: #9c27b0;
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+    }
+    .help-text h3 .icon {
+        margin-right: 0.5rem;
+        font-size: 1.3rem;
+    }
+    .help-text ol {
+        padding-left: 1.5rem;
+        margin: 0.5rem 0 1rem 0;
+    }
+    .help-text li {
+        margin-bottom: 0.8rem;
+        position: relative;
+        padding-left: 0.5rem;
+    }
+    .help-text li::before {
+        content: "▸";
+        color: #f59e42;
+        font-weight: bold;
+        position: absolute;
+        left: -1rem;
+    }
+    .help-text .sub-list {
+        padding-left: 1.5rem;
+        list-style-type: none;
+        margin: 0.5rem 0;
+    }
+    .help-text .sub-list li {
+        margin-bottom: 0.5rem;
+        position: relative;
+        padding-left: 0.5rem;
+    }
+    .help-text .sub-list li::before {
+        content: "▹";
+        color: #3498db;
+        font-weight: normal;
+        position: absolute;
+        left: -1rem;
+    }
+    .help-text .example {
+        background-color: #f8f9fa;
+        border-left: 3px solid #f59e42;
+        padding: 0.8rem;
+        margin: 0.8rem 0;
+        border-radius: 0 5px 5px 0;
+    }
+    .help-text .highlight {
+        color: #e74c3c;
+        font-weight: bold;
+    }
+    .help-text .highlight-blue {
+        color: #3498db;
+        font-weight: bold;
+    }
+    .help-text .highlight-green {
+        color: #2ecc71;
+        font-weight: bold;
+    }
+    /* Ventana de confirmación */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 100;
+        justify-content: center;
+        align-items: center;
+    }
+    .modal-content {
+        background-color: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        text-align: center;
+        max-width: 400px;
+        width: 90%;
+    }
+    .modal-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    .modal-btn {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        min-width: 80px;
+    }
+    .modal-btn-yes {
+        background-color: #2ecc71;
+        color: white;
+    }
+    .modal-btn-no {
+        background-color: #e74c3c;
+        color: white;
+    }
+    
+    /* Indicador de nivel */
+    .level-indicator {
+        font-size: clamp(1rem, 3vw, 1.2rem);
+        font-weight: 700;
+        color: #f59e42;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Indicador de modo infinito */
+    .infinite-mode {
+        font-size: clamp(1rem, 3vw, 1.2rem);
+        font-weight: 700;
+        color: #f59e42;
+        margin-bottom: 0.5rem;
+    }
+    
+    /* Texto de ayuda */
+    .help-text {
+        font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+        color: #666;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+    
+    /* Media queries para diseño responsive */
+    @media (min-width: 601px) {
+        .btn-row {
+            flex-wrap: nowrap;
+            justify-content: center;
+        }
+    }
+    
+    @media (max-width: 600px) {
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .btn-row {
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        
+        .btn {
+            width: 80%;
+            max-width: 250px;
+        }
+        
+        .number-value {
+            font-size: 1.4rem;
+        }
+        
+        .arrow-btn {
+            width: 25px;
+            height: 25px;
+            font-size: 0.9rem;
+        }
+        
+        header {
+            margin-top: 2.5rem;
+        }
+    }
+</style>
+</head>
+<body>
+<div class="game-container">
+    <button class="mute-btn" id="muteBtn" title="Silenciar/Activar sonido">🔊</button>
+    <!-- Pantalla de inicio -->
+    <div class="screen active" id="startScreen">
+        <header>
+            <h1>Ordenar números de 5 cifras</h1>
+        </header>
+        <div class="start-content">
+            <div class="instructions">Ordena los números que aparecen de mayor a menor</div>
+            <div class="advice-box" role="note" aria-live="polite">
+                Todos los números son de <span class="highlight-keyword">cinco cifras</span>. Compara de <span class="highlight-keyword">izquierda a derecha</span> para saber qué número es mayor.
+            </div>
+            <button class="btn btn-start" id="startBtn">Comenzar</button>
+        </div>
+    </div>
+    <!-- Juego -->
+    <div class="screen" id="gameScreen">
+        <button class="btn-help" id="helpBtn" title="Ayuda">?</button>
+        <header>
+            <h1>Ordenar números de 5 cifras</h1>
+            <div class="level-indicator" id="levelIndicator">Nivel 1/5</div>
+            <div class="infinite-mode" id="infiniteMode" style="display: none;">Nivel infinito</div>
+        </header>
+        <div class="game-info" id="gameInfo">
+            <div class="timer" id="timer">00:00</div>
+            <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+            <div class="score" id="gameScore">Puntos: <span id="score">0</span></div>
+        </div>
+        <div class="help-text">Ordena los siguientes números de mayor a menor. Si tienes dudas, pulsa el icono de ayuda.</div>
+        <div class="numbers-container" id="numbersContainer">
+            <!-- Los números se añadirán aquí dinámicamente -->
+        </div>
+        <div class="action-buttons">
+            <div class="btn-row">
+                <button class="btn btn-check" id="checkBtn">Comprobar</button>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-continue" id="continueBtn" style="display:none;">Continuar</button>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-reset" id="resetBtn">Reiniciar</button>
+            </div>
+        </div>
+    </div>
+    <!-- Resultados -->
+    <div class="screen" id="resultsScreen">
+        <header>
+            <h1>Número de 5 cifras</h1>
+        </header>
+        <div class="results-screen">
+            <!-- Contenedor combinado para trofeo y mensaje de ánimo -->
+            <div id="trophyAndMessageContainer">
+                <div id="trophyContainer" style="display:none;">
+                    <div class="trophy">🏆</div>
+                    <h2 style="color:#f59e42; margin-bottom:0.4rem; font-size:1.3rem;">¡Perfecto!</h2>
+                </div>
+                <div id="encouragementMessage" class="encouragement" style="display:none;"></div>
+            </div>
+            <div class="final-score">Puntuación: <span id="finalScore">0</span>/100</div>
+            <div class="final-time">Tiempo total: <span id="finalTime">00:00</span></div>
+            <button class="btn btn-play-again" id="playAgainBtn">Volver a jugar</button>
+            <button class="btn btn-infinite" id="infiniteBtn" style="margin-top: 0.5rem;">Entrenamiento infinito</button>
+            <div class="credit" id="credit">Creado por Manuel J. Ventura</div>
+            <img src="https://raw.githubusercontent.com/ManuelVS8/Efectos_audio/1e2a36cdd1f8bedcb578a30f5ec5cc8f21c287fe/Siurot.png" alt="Logo del colegio" class="school-logo">
+        </div>
+    </div>
+</div>
+<!-- Ventana de ayuda -->
+<div class="help-modal" id="helpModal">
+    <div class="help-content">
+        <div class="help-header">
+            <h2 class="help-title">¿Cómo ordenar números?</h2>
+            <button class="close-btn" id="closeHelpBtn">&times;</button>
+        </div>
+        <div class="help-text">
+            <h3><span class="icon">🔹</span> Pasos a seguir:</h3>
+            <ol>
+                <li><strong>Compara la cantidad de cifras</strong> de cada número.
+                    <ul class="sub-list">
+                        <li>Un número con <span class="highlight-blue">más cifras</span> siempre es <span class="highlight-green">mayor</span>.</li>
+                        <li>Ejemplo: <span class="highlight">3.456</span> (4 cifras) es mayor que <span class="highlight-blue">987</span> (3 cifras).</li>
+                    </ul>
+                </li>
+                <li><strong>Si tienen el mismo número de cifras</strong>, compara sus dígitos de <span class="highlight">izquierda a derecha</span>.
+                    <ul class="sub-list">
+                        <li>Empieza por el <span class="highlight-blue">primer dígito</span> (el de mayor valor posicional).</li>
+                        <li>Si son iguales, sigue comparando con el siguiente hasta encontrar una diferencia.</li>
+                    </ul>
+                    <div class="example">
+                        <strong>Ejemplo:</strong> Para <span class="highlight">4.512</span> y <span class="highlight-blue">4.398</span>, ambos tienen 4 cifras. Se comparan:<br>
+                        • Primer dígito: 4 = 4<br>
+                        • Segundo dígito: <span class="highlight-green">5 > 3</span> 👉 <span class="highlight-green">4.512 es mayor</span>.
+                    </div>
+                </li>
+                <li><strong>Coloca los números</strong> en orden creciente o decreciente, según se pida.
+                    <ul class="sub-list">
+                        <li><span class="highlight-blue">Orden creciente</span> (de menor a mayor): del número más pequeño al más grande.</li>
+                        <li><span class="highlight-green">Orden decreciente</span> (de mayor a menor): del número más grande al más pequeño.</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+    </div>
+</div>
+<!-- Ventana de confirmación para reiniciar -->
+<div class="modal" id="resetModal">
+    <div class="modal-content">
+        <p>¿Quieres abandonar y reiniciar el juego?</p>
+        <div class="modal-buttons">
+            <button class="modal-btn modal-btn-yes" id="confirmResetBtn">Sí</button>
+            <button class="modal-btn modal-btn-no" id="cancelResetBtn">No</button>
+        </div>
+    </div>
+</div>
+<script>
+/* ---------- Sonidos ---------- */
+// Precarga de sonidos
+const soundFiles = {
+    correct: 'https://raw.githubusercontent.com/ManuelVS8/Efectos_audio/7b86808e254100aeaba6285b3e0b82650ae78055/Correcto.mp3',
+    error: 'https://raw.githubusercontent.com/ManuelVS8/Efectos_audio/7b86808e254100aeaba6285b3e0b82650ae78055/Error.mp3',
+    completed: 'https://raw.githubusercontent.com/ManuelVS8/Efectos_audio/7b86808e254100aeaba6285b3e0b82650ae78055/Completado.mp3',
+    victory: 'https://raw.githubusercontent.com/ManuelVS8/Efectos_audio/7b86808e254100aeaba6285b3e0b82650ae78055/Termin%C3%A9.mp3',
+    tap: 'https://raw.githubusercontent.com/ManuelVS8/Efectos_audio/37b3eb2da9c15c04dfb71dfe1be60f088ea3cdfc/Tap.mp3',
+    final: 'https://raw.githubusercontent.com/ManuelVS8/Efectos_audio/0b28bf817be00a46c460204ed9127cfd919eea3c/Final.mp3'
+};
+const sounds = {};
+let audioUnlocked = false;
+
+// Cargar todos los sonidos al inicio
+Object.keys(soundFiles).forEach(key => {
+    sounds[key] = new Audio(soundFiles[key]);
+    sounds[key].load();
+});
+
+// Función para desbloquear el audio
+function unlockAudio() {
+    if (audioUnlocked) return;
+    
+    // Crear y reproducir un sonido silencioso para desbloquear el audio
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(ctx.destination);
+    
+    gainNode.gain.value = 0.001; // Volumen casi imperceptible
+    oscillator.start();
+    oscillator.stop(ctx.currentTime + 0.001);
+    
+    audioUnlocked = true;
+    
+    // Recargar todos los sonidos para asegurar que estén listos
+    Object.keys(sounds).forEach(key => {
+        sounds[key].load();
+    });
+}
+
+// Funciones para reproducir sonidos
+function reproducirSonidoCorrecto() {
+    if (audioUnlocked && sounds.correct && !gameState.isMuted) {
+        sounds.correct.currentTime = 0;
+        sounds.correct.play().catch(e => console.log("Error al reproducir sonido correcto:", e));
+    }
+}
+
+function reproducirSonidoError() {
+    if (audioUnlocked && sounds.error && !gameState.isMuted) {
+        sounds.error.currentTime = 0;
+        sounds.error.play().catch(e => console.log("Error al reproducir sonido de error:", e));
+    }
+}
+
+function reproducirSonidoCompletado() {
+    if (audioUnlocked && sounds.completed && !gameState.isMuted) {
+        sounds.completed.currentTime = 0;
+        sounds.completed.play().catch(e => console.log("Error al reproducir sonido completado:", e));
+    }
+}
+
+function reproducirSonidoVictoria() {
+    if (audioUnlocked && sounds.victory && !gameState.isMuted) {
+        sounds.victory.currentTime = 0;
+        sounds.victory.play().catch(e => console.log("Error al reproducir sonido de victoria:", e));
+    }
+}
+
+function reproducirSonidoTap() {
+    if (audioUnlocked && sounds.tap && !gameState.isMuted) {
+        sounds.tap.currentTime = 0;
+        sounds.tap.play().catch(e => console.log("Error al reproducir sonido tap:", e));
+    }
+}
+
+function reproducirSonidoFinal() {
+    if (audioUnlocked && sounds.final && !gameState.isMuted) {
+        sounds.final.currentTime = 0;
+        sounds.final.play().catch(e => console.log("Error al reproducir sonido final:", e));
+    }
+}
+
+/* ---------- Estado del juego ---------- */
+const gameState = {
+    numbers: [],
+    orderedNumbers: [],
+    score: 0,
+    infiniteScore: 0,
+    timeElapsed: 0,
+    timerInterval: null,
+    isGameActive: false,
+    isMuted: false,
+    totalLevels: 5,
+    currentLevel: 0,
+    correctAnswers: 0,
+    isInfiniteMode: false
+};
+
+/* ---------- Generación de números ---------- */
+function generateNumbers() {
+    // Seleccionar tres cifras al azar (del 0 al 9)
+    let digits = [];
+    while (digits.length < 3) {
+        const digit = Math.floor(Math.random() * 10);
+        if (!digits.includes(digit)) {
+            digits.push(digit);
+        }
+    }
+    
+    // Asegurar que al menos una de las cifras no sea cero para las DM
+    if (digits[0] === 0 && digits[1] === 0 && digits[2] === 0) {
+        digits[0] = Math.floor(Math.random() * 9) + 1;
+    }
+    
+    // Generar los dos primeros dígitos para los tres números que coinciden en DM y UM
+    const firstTwoDigits = generateFirstTwoDigits(digits);
+    
+    // Generar los 5 números
+    const numbers = [];
+    
+    // Generar 3 números que coinciden en las dos primeras cifras
+    for (let i = 0; i < 3; i++) {
+        let number;
+        let attempts = 0;
+        do {
+            number = firstTwoDigits;
+            // Generar los tres dígitos restantes usando las tres cifras seleccionadas
+            for (let j = 0; j < 3; j++) {
+                number += digits[Math.floor(Math.random() * 3)];
+            }
+            attempts++;
+        } while (numbers.includes(parseInt(number)) && attempts < 10);
+        
+        numbers.push(parseInt(number));
+    }
+    
+    // Generar 2 números más usando solo las tres cifras seleccionadas
+    for (let i = 0; i < 2; i++) {
+        let number;
+        let attempts = 0;
+        do {
+            number = '';
+            // Generar los 5 dígitos usando las tres cifras seleccionadas
+            for (let j = 0; j < 5; j++) {
+                // Para el primer dígito, asegurar que no sea cero
+                if (j === 0) {
+                    const nonZeroDigits = digits.filter(d => d !== 0);
+                    number += nonZeroDigits[Math.floor(Math.random() * nonZeroDigits.length)];
+                } else {
+                    number += digits[Math.floor(Math.random() * 3)];
+                }
+            }
+            attempts++;
+        } while (numbers.includes(parseInt(number)) && attempts < 10);
+        
+        numbers.push(parseInt(number));
+    }
+    
+    // Mezclar los números para que aparezcan en orden aleatorio
+    return shuffleArray(numbers);
+}
+
+function generateFirstTwoDigits(digits) {
+    // Generar el primer dígito (DM) - no puede ser cero
+    const nonZeroDigits = digits.filter(d => d !== 0);
+    const firstDigit = nonZeroDigits[Math.floor(Math.random() * nonZeroDigits.length)];
+    
+    // Generar el segundo dígito (UM)
+    const secondDigit = digits[Math.floor(Math.random() * 3)];
+    
+    return firstDigit.toString() + secondDigit.toString();
+}
+
+function shuffleArray(array) {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+}
+
+/* ---------- Inicialización del juego ---------- */
+function initGame() {
+    // Generar números
+    gameState.numbers = generateNumbers();
+    gameState.orderedNumbers = [...gameState.numbers].sort((a, b) => b - a);
+    
+    if (!gameState.isInfiniteMode) {
+        gameState.currentLevel++;
+        // Actualizar el indicador de nivel
+        document.getElementById('levelIndicator').textContent = `Nivel ${gameState.currentLevel}/${gameState.totalLevels}`;
+        document.getElementById('levelIndicator').style.display = 'block';
+        document.getElementById('infiniteMode').style.display = 'none';
+        document.getElementById('gameScore').innerHTML = 'Puntos: <span id="score">' + gameState.score + '</span>';
+    } else {
+        // En modo infinito, mostrar "Nivel infinito" y la puntuación infinita
+        document.getElementById('levelIndicator').style.display = 'none';
+        document.getElementById('infiniteMode').style.display = 'block';
+        document.getElementById('gameScore').innerHTML = 'Puntos: <span id="score">' + gameState.infiniteScore + '</span>';
+    }
+    
+    // Mostrar los números
+    displayNumbers();
+    
+    // Actualizar la barra de progreso (solo en modo normal)
+    if (!gameState.isInfiniteMode) {
+        updateProgress();
+    }
+    
+    // Ocultar botón continuar y mostrar botón comprobar
+    document.getElementById('continueBtn').style.display = 'none';
+    document.getElementById('checkBtn').style.display = 'flex';
+    
+    // El botón comprobar siempre está activo
+    document.getElementById('checkBtn').disabled = false;
+}
+
+function displayNumbers() {
+    const container = document.getElementById('numbersContainer');
+    container.innerHTML = '';
+    
+    gameState.numbers.forEach((number, index) => {
+        const numberItem = document.createElement('div');
+        numberItem.className = 'number-item';
+        numberItem.dataset.index = index;
+        
+        const numberValue = document.createElement('div');
+        numberValue.className = 'number-value';
+        numberValue.textContent = number.toLocaleString('es-ES');
+        
+        const numberControls = document.createElement('div');
+        numberControls.className = 'number-controls';
+        
+        const upBtn = document.createElement('button');
+        upBtn.className = 'arrow-btn';
+        upBtn.innerHTML = '▲';
+        upBtn.disabled = index === 0; // Deshabilitar si es el primer elemento
+        upBtn.addEventListener('click', () => moveNumberUp(index));
+        
+        const downBtn = document.createElement('button');
+        downBtn.className = 'arrow-btn';
+        downBtn.innerHTML = '▼';
+        downBtn.disabled = index === gameState.numbers.length - 1; // Deshabilitar si es el último elemento
+        downBtn.addEventListener('click', () => moveNumberDown(index));
+        
+        numberControls.appendChild(upBtn);
+        numberControls.appendChild(downBtn);
+        
+        numberItem.appendChild(numberValue);
+        numberItem.appendChild(numberControls);
+        
+        container.appendChild(numberItem);
+    });
+}
+
+function moveNumberUp(index) {
+    reproducirSonidoTap();
+    
+    if (index === 0) return; // Ya está en la parte superior
+    
+    // Intercambiar en el array
+    [gameState.numbers[index], gameState.numbers[index - 1]] = 
+    [gameState.numbers[index - 1], gameState.numbers[index]];
+    
+    // Actualizar la visualización
+    updateNumbersDisplay();
+}
+
+function moveNumberDown(index) {
+    reproducirSonidoTap();
+    
+    if (index === gameState.numbers.length - 1) return; // Ya está en la parte inferior
+    
+    // Intercambiar en el array
+    [gameState.numbers[index], gameState.numbers[index + 1]] = 
+    [gameState.numbers[index + 1], gameState.numbers[index]];
+    
+    // Actualizar la visualización
+    updateNumbersDisplay();
+}
+
+function updateNumbersDisplay() {
+    const container = document.getElementById('numbersContainer');
+    container.innerHTML = '';
+    
+    gameState.numbers.forEach((number, index) => {
+        const numberItem = document.createElement('div');
+        numberItem.className = 'number-item';
+        numberItem.dataset.index = index;
+        
+        const numberValue = document.createElement('div');
+        numberValue.className = 'number-value';
+        numberValue.textContent = number.toLocaleString('es-ES');
+        
+        const numberControls = document.createElement('div');
+        numberControls.className = 'number-controls';
+        
+        const upBtn = document.createElement('button');
+        upBtn.className = 'arrow-btn';
+        upBtn.innerHTML = '▲';
+        upBtn.disabled = index === 0; // Deshabilitar si es el primer elemento
+        upBtn.addEventListener('click', () => moveNumberUp(index));
+        
+        const downBtn = document.createElement('button');
+        downBtn.className = 'arrow-btn';
+        downBtn.innerHTML = '▼';
+        downBtn.disabled = index === gameState.numbers.length - 1; // Deshabilitar si es el último elemento
+        downBtn.addEventListener('click', () => moveNumberDown(index));
+        
+        numberControls.appendChild(upBtn);
+        numberControls.appendChild(downBtn);
+        
+        numberItem.appendChild(numberValue);
+        numberItem.appendChild(numberControls);
+        
+        container.appendChild(numberItem);
+    });
+}
+
+function checkAnswer() {
+    // Verificar si los números están ordenados de mayor a menor
+    const isCorrect = gameState.numbers.every((number, index) => {
+        return number === gameState.orderedNumbers[index];
+    });
+    
+    if (isCorrect) {
+        // Si la respuesta es correcta, actualizar puntuación
+        gameState.correctAnswers++;
+        if (gameState.isInfiniteMode) {
+            gameState.infiniteScore += 10;
+            document.getElementById('score').textContent = gameState.infiniteScore;
+        } else {
+            gameState.score += 20; // 20 puntos por cada respuesta correcta (100/5)
+            document.getElementById('score').textContent = gameState.score;
+        }
+        reproducirSonidoCorrecto();
+        
+        // Verificar si hemos completado todos los niveles (solo en modo normal)
+        if (!gameState.isInfiniteMode && gameState.currentLevel >= gameState.totalLevels) {
+            endGame();
+            return;
+        }
+        
+        // Pasar al siguiente nivel sin retardo
+        setTimeout(() => {
+            initGame();
+        }, 500); // Pequeña demora para que el usuario vea que fue correcto
+    } else {
+        // Si la respuesta es incorrecta, mostrar los errores
+        reproducirSonidoError();
+        
+        // Mostrar el resultado con colores
+        const container = document.getElementById('numbersContainer');
+        const items = Array.from(container.children);
+        
+        items.forEach((item, index) => {
+            const numberValue = item.querySelector('.number-value');
+            const userNumber = gameState.numbers[index];
+            const correctNumber = gameState.orderedNumbers[index];
+            
+            if (userNumber === correctNumber) {
+                numberValue.classList.add('correct');
+            } else {
+                numberValue.classList.add('incorrect');
+            }
+        });
+        
+        // Ocultar el botón comprobar y mostrar el botón continuar
+        document.getElementById('checkBtn').style.display = 'none';
+        document.getElementById('continueBtn').style.display = 'flex';
+    }
+}
+
+function continueGame() {
+    // Limpiar los colores de los números
+    const container = document.getElementById('numbersContainer');
+    const items = Array.from(container.children);
+    
+    items.forEach(item => {
+        const numberValue = item.querySelector('.number-value');
+        numberValue.classList.remove('correct', 'incorrect');
+    });
+    
+    // Verificar si hemos completado todos los niveles (solo en modo normal)
+    if (!gameState.isInfiniteMode && gameState.currentLevel >= gameState.totalLevels) {
+        endGame();
+        return;
+    }
+    
+    // Inicializar el siguiente nivel sin demora
+    initGame();
+}
+
+function updateProgress() {
+    const progress = (gameState.currentLevel / gameState.totalLevels) * 100;
+    document.getElementById('progressFill').style.width = `${progress}%`;
+}
+
+function startTimer() {
+    gameState.timerInterval = setInterval(() => {
+        gameState.timeElapsed++;
+        const minutes = Math.floor(gameState.timeElapsed / 60);
+        const seconds = gameState.timeElapsed % 60;
+        document.getElementById('timer').textContent = 
+            `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }, 1000);
+}
+
+function stopTimer() {
+    clearInterval(gameState.timerInterval);
+}
+
+function formatTime(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+
+function endGame() {
+    // Detener el temporizador
+    stopTimer();
+    
+    // Calcular la puntuación final
+    const finalScore = gameState.score;
+    
+    // Mostrar la pantalla de resultados
+    document.getElementById('gameScreen').classList.remove('active');
+    document.getElementById('resultsScreen').classList.add('active');
+    
+    // Actualizar los resultados
+    document.getElementById('finalScore').textContent = finalScore;
+    document.getElementById('finalTime').textContent = formatTime(gameState.timeElapsed);
+    
+    // Mostrar el trofeo si la puntuación es perfecta
+    if (finalScore === 100) {
+        document.getElementById('trophyContainer').style.display = 'block';
+        reproducirSonidoVictoria();
+        createConfetti();
+    } else {
+        reproducirSonidoFinal();
+        
+        // Mostrar un mensaje de ánimo según la puntuación
+        const encouragementMessage = document.getElementById('encouragementMessage');
+        encouragementMessage.style.display = 'block';
+        
+        if (finalScore >= 80) {
+            encouragementMessage.textContent = '¡Excelente trabajo! Sigue así.';
+        } else if (finalScore >= 60) {
+            encouragementMessage.textContent = '¡Buen trabajo! Puedes mejorar.';
+        } else if (finalScore >= 40) {
+            encouragementMessage.textContent = 'Sigue practicando, mejorarás.';
+        } else {
+            encouragementMessage.textContent = 'No te rindas, la práctica hace al maestro.';
+        }
+    }
+}
+
+function resetGame() {
+    // Mostrar la ventana de confirmación
+    document.getElementById('resetModal').style.display = 'flex';
+}
+
+function confirmReset() {
+    // Ocultar la ventana de confirmación
+    document.getElementById('resetModal').style.display = 'none';
+    
+    if (gameState.isInfiniteMode) {
+        // Si estamos en modo infinito, volver a la pantalla de inicio
+        goToStartScreen();
+    } else {
+        // Reiniciar el estado del juego
+        gameState.numbers = [];
+        gameState.orderedNumbers = [];
+        gameState.score = 0;
+        gameState.timeElapsed = 0;
+        gameState.currentLevel = 0;
+        gameState.correctAnswers = 0;
+        
+        // Actualizar la puntuación
+        document.getElementById('score').textContent = '0';
+        
+        // Detener el temporizador
+        stopTimer();
+        
+        // Reiniciar el temporizador
+        document.getElementById('timer').textContent = '00:00';
+        
+        // Volver a la pantalla de inicio
+        document.getElementById('gameScreen').classList.remove('active');
+        document.getElementById('resultsScreen').classList.remove('active');
+        document.getElementById('startScreen').classList.add('active');
+    }
+}
+
+function cancelReset() {
+    // Ocultar la ventana de confirmación
+    document.getElementById('resetModal').style.display = 'none';
+}
+
+function goToStartScreen() {
+    // Reiniciar el estado del juego
+    gameState.numbers = [];
+    gameState.orderedNumbers = [];
+    gameState.score = 0;
+    gameState.infiniteScore = 0;
+    gameState.timeElapsed = 0;
+    gameState.currentLevel = 0;
+    gameState.correctAnswers = 0;
+    gameState.isInfiniteMode = false;
+    
+    // Actualizar la puntuación
+    document.getElementById('score').textContent = '0';
+    
+    // Detener el temporizador
+    stopTimer();
+    
+    // Reiniciar el temporizador
+    document.getElementById('timer').textContent = '00:00';
+    
+    // Volver a la pantalla de inicio
+    document.getElementById('gameScreen').classList.remove('active');
+    document.getElementById('resultsScreen').classList.remove('active');
+    document.getElementById('startScreen').classList.add('active');
+}
+
+function playAgain() {
+    goToStartScreen();
+}
+
+function startInfiniteMode() {
+    // Configurar el modo infinito
+    gameState.isInfiniteMode = true;
+    gameState.numbers = [];
+    gameState.orderedNumbers = [];
+    gameState.score = 0;
+    gameState.infiniteScore = 0;
+    gameState.timeElapsed = 0;
+    gameState.currentLevel = 0;
+    gameState.correctAnswers = 0;
+    
+    // Actualizar la puntuación
+    document.getElementById('score').textContent = '0';
+    
+    // Reiniciar el temporizador
+    document.getElementById('timer').textContent = '00:00';
+    
+    // Ocultar el trofeo y el mensaje de ánimo
+    document.getElementById('trophyContainer').style.display = 'none';
+    document.getElementById('encouragementMessage').style.display = 'none';
+    
+    // Cambiar el texto del botón reiniciar
+    document.getElementById('resetBtn').textContent = 'Volver a la pantalla de inicio';
+    
+    // Iniciar el juego
+    document.getElementById('resultsScreen').classList.remove('active');
+    document.getElementById('gameScreen').classList.add('active');
+    
+    // Inicializar el juego
+    initGame();
+    
+    // Iniciar el temporizador
+    startTimer();
+}
+
+function toggleMute() {
+    gameState.isMuted = !gameState.isMuted;
+    document.getElementById('muteBtn').textContent = gameState.isMuted ? '🔇' : '🔊';
+}
+
+function createConfetti() {
+    // Crear confeti que cae hacia abajo
+    for (let i = 0; i < 100; i++) {
+        setTimeout(() => {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            
+            // Posición aleatoria en la parte superior
+            const x = Math.random() * window.innerWidth;
+            const y = -10; // Comienza un poco arriba de la pantalla
+            
+            // Color aleatorio
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#ff69b4'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            
+            // Configurar el confeti
+            confetti.style.left = `${x}px`;
+            confetti.style.top = `${y}px`;
+            confetti.style.backgroundColor = color;
+            
+            // Tamaño aleatorio
+            const size = Math.random() * 10 + 5;
+            confetti.style.width = `${size}px`;
+            confetti.style.height = `${size}px`;
+            
+            // Dirección horizontal aleatoria
+            const tx = (Math.random() - 0.5) * 100; // Movimiento horizontal aleatorio
+            const ty = window.innerHeight + 10; // Caer hasta abajo de la pantalla
+            
+            confetti.style.setProperty('--tx', `${tx}px`);
+            confetti.style.setProperty('--ty', `${ty}px`);
+            
+            // Añadir al DOM
+            document.body.appendChild(confetti);
+            
+            // Eliminar después de la animación
+            setTimeout(() => {
+                confetti.remove();
+            }, 3000); // 3 segundos para que caiga
+        }, i * 30); // Cada 30ms un nuevo confeti
+    }
+}
+
+// Event listeners
+document.getElementById('startBtn').addEventListener('click', () => {
+    reproducirSonidoTap();
+    unlockAudio();
+    document.getElementById('startScreen').classList.remove('active');
+    document.getElementById('gameScreen').classList.add('active');
+    initGame();
+    startTimer();
+});
+
+document.getElementById('checkBtn').addEventListener('click', checkAnswer);
+document.getElementById('continueBtn').addEventListener('click', continueGame);
+document.getElementById('resetBtn').addEventListener('click', () => {
+    reproducirSonidoTap();
+    resetGame();
+});
+document.getElementById('confirmResetBtn').addEventListener('click', () => {
+    reproducirSonidoTap();
+    confirmReset();
+});
+document.getElementById('cancelResetBtn').addEventListener('click', () => {
+    reproducirSonidoTap();
+    cancelReset();
+});
+document.getElementById('playAgainBtn').addEventListener('click', () => {
+    reproducirSonidoTap();
+    unlockAudio();
+    playAgain();
+});
+document.getElementById('infiniteBtn').addEventListener('click', () => {
+    reproducirSonidoTap();
+    unlockAudio();
+    startInfiniteMode();
+});
+document.getElementById('muteBtn').addEventListener('click', toggleMute);
+
+// Event listeners para la ventana de ayuda
+document.getElementById('helpBtn').addEventListener('click', () => {
+    reproducirSonidoTap();
+    document.getElementById('helpModal').style.display = 'flex';
+});
+
+document.getElementById('closeHelpBtn').addEventListener('click', () => {
+    reproducirSonidoTap();
+    document.getElementById('helpModal').style.display = 'none';
+});
+
+// Cerrar la ventana de ayuda al hacer clic fuera del contenido
+document.getElementById('helpModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('helpModal')) {
+        reproducirSonidoTap();
+        document.getElementById('helpModal').style.display = 'none';
+    }
+});
+</script>
+</body>
+</html>
